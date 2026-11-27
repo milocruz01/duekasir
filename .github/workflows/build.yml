@@ -53,6 +53,74 @@ jobs:
                   open(f, 'w').write(n)
                   print('patched', f)
           EOF
+      - name: Car wash, English and peso patch
+        run: |
+          python3 - <<'EOF'
+          import glob, re
+          M = {
+           "Apakah kamu yakin akan menghapusnya?": "Are you sure you want to delete it?",
+           "Baju": "Basic Wash",
+           "Barang Masuk": "Item Received",
+           "Batal": "Cancel", "Bayar": "Pay", "Catatan": "Note",
+           "H Jual Persen": "Price Percent",
+           "H Jual Setelah Discount": "Price After Discount",
+           "Harga Dasar": "Cost", "Harga Jual": "Price",
+           "Harga Total": "Total Price", "Harga": "Price",
+           "Jatuh Tempo": "Due Date", "Jumlah Barang": "Quantity",
+           "Kasir": "Cashier", "Kembali": "Change", "Kembalian": "Change",
+           "Lanjutkan": "Continue", "Masuk": "Received",
+           "Nama Barang is required": "Service name is required",
+           "Nama Barang": "Service Name", "Nama PT": "Supplier Name", "Nama": "Name",
+           "No Faktur (Jika Ada)": "Invoice No. (if any)",
+           "Pelanggan": "Customer",
+           "Pembayaran Cash": "Cash payment",
+           "Pembayaran dengan Qris": "QR payment",
+           "Pembayaran melalui Transfer": "Bank transfer",
+           "Peminjam": "Borrower", "Periode": "Period", "Rental Periode": "Rental Period",
+           "Saya Bertanggun Jawab": "I take responsibility",
+           "Simpan": "Save", "Sync Item Penjualan": "Sync Sales Items",
+           "Telat karena...": "Late because...", "Tempo": "Due",
+           "Tindakan ini tidak dapat di kembalikan, data akan di hapus dari list": "This action cannot be undone. The data will be removed from the list.",
+           "Tipe pembayaran": "Payment type",
+           "Total Penjualan Hari ini": "Total Sales Today",
+           "Total Penjualan Kemarin": "Total Sales Yesterday",
+           "Total Tagihan": "Total Bill", "Total Visitors": "Total Customers",
+           "Ukuran Barang": "Vehicle Size", "Ukuran is required": "Vehicle size is required",
+           "Ukuran": "Size", "Umum": "General",
+           "ex. status titip barang": "ex. note",
+           "ex. uang makan": "ex. soap, water bill",
+           "ex: Barang Kondisi Bagus": "ex: Vehicle in good condition",
+           "ex. S/M/L 50ml/100ml": "ex. Sedan / SUV / Van",
+           "Pinalti keterlambatan Rp. 8.000,- perhari": "Late penalty 50 pesos per day",
+           "ex: Rp 10.000.000,-": "ex: 10,000",
+           "Due Kasir": "Car Wash POS",
+           "Enjoy Due Kasir!": "Enjoy Car Wash POS!",
+           "Login and Enjoy Due Kasir!": "Login and Enjoy Car Wash POS!",
+           "Sync Done, Enjoy Due Kasir!": "Sync Done, Enjoy Car Wash POS!",
+           "Langit Baby Shop": "My Car Wash",
+           "PT Keluarga Langit": "My Car Wash",
+           "Whatsapp/Phone: +6285111222333": "Phone: +63 900 000 0000",
+           "Inventory": "Services",
+           "Selling": "Cashier",
+           "You can add it on inventory": "You can add it in Services",
+           "Item Not Found": "Service Not Found",
+           "Sold Items": "Services Sold",
+           "Best Seller": "Top Services",
+           "Out of Stock": "Out of Supplies",
+          }
+          for f in glob.glob('lib/**/*.dart', recursive=True):
+              if f.endswith('.g.dart'):
+                  continue
+              s = open(f, encoding='utf-8').read()
+              o = s
+              for a, b in M.items():
+                  s = s.replace("'" + a + "'", "'" + b + "'")
+              if f.endswith('utils/constant.dart'):
+                  s = re.sub(r"NumberFormat\.currency\([^)]*\)", "NumberFormat.currency(locale: 'en_US', symbol: '\u20b1', decimalDigits: 2)", s)
+              if s != o:
+                  open(f, 'w', encoding='utf-8').write(s)
+                  print('patched', f)
+          EOF
       - run: flutter build apk --release
       - uses: actions/upload-artifact@v4
         with:
