@@ -12,6 +12,46 @@ jobs:
           flutter-version: '3.24.5'
           channel: stable
       - run: flutter pub get
+      - name: Patch old settings
+        run: |
+          sed -i 's/signingConfig = signingConfigs.release/signingConfig = signingConfigs.debug/' android/app/build.gradle
+          sed -i 's/compileSdk = flutter.compileSdkVersion/compileSdk = 35/' android/app/build.gradle
+          echo "android.suppressUnsupportedCompileSdk=35" >> android/gradle.properties
+          cat > android/build.gradle <<'EOF'
+          allprojects {
+              repositories {
+                  google()
+                  mavenCentral()
+              }
+          }
+          rootProject.buildDir = "../build"
+          subprojects {
+              project.buildDir = "${rootProject.buildDir}/${project.name}"
+          }
+          subprojects {
+              afterEvaluate { p ->
+                  def a = p.extensions.findByName('android')
+                  if (a != null) {
+                      a.compileSdkVersion(35)
+                  }
+              }
+          }
+          subprojects {
+              project.evaluationDependsOn(":app")
+          }
+          tasks.register("clean", Delete) {
+              delete rootProject.buildDir
+          }
+          EOF
+          python3 - <<'EOF'
+          import re, glob, os
+          for f in glob.glob(os.path.expanduser('~/.pub-cache/hosted/*/*/android/build.gradle')):
+              s = open(f).read()
+              n = re.sub(r"(kotlin_version\s*=\s*)['\"][0-9.]+['\"]", r"\g<1>'1.9.23'", s)
+              if n != s:
+                  open(f, 'w').write(n)
+                  print('patched', f)
+          EOF
       - run: flutter build apk --release
       - uses: actions/upload-artifact@v4
         with:
