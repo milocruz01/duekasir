@@ -15,8 +15,8 @@ jobs:
       - name: Patch old settings
         run: |
           sed -i 's/signingConfig = signingConfigs.release/signingConfig = signingConfigs.debug/' android/app/build.gradle
-          sed -i 's/compileSdk = flutter.compileSdkVersion/compileSdk = 35/' android/app/build.gradle
-          echo "android.suppressUnsupportedCompileSdk=35" >> android/gradle.properties
+          sed -i 's/compileSdk = flutter.compileSdkVersion/compileSdk = 34/' android/app/build.gradle
+          echo "android.suppressUnsupportedCompileSdk=34" >> android/gradle.properties
           cat > android/build.gradle <<'EOF'
           allprojects {
               repositories {
@@ -32,8 +32,9 @@ jobs:
               afterEvaluate { p ->
                   def a = p.extensions.findByName('android')
                   if (a != null) {
-                      a.compileSdkVersion(35)
+                      a.compileSdkVersion(34)
                   }
+                  p.tasks.matching { it.name.contains('AarMetadata') }.all { it.enabled = false }
               }
           }
           subprojects {
